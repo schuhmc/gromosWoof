@@ -9,6 +9,15 @@ import numpy as np
 
 class Woof():
     def __init__(self, basepath: str = "./", host: str = None, user: str = None, progressbar = True):
+        """
+        Watchdog class
+
+        Args:
+            basepath (str, optional): Path to the directory where the individual simulation folders are. Defaults to "./".
+            host (str, optional): hostname to connect to to get slurm status. Defaults to None.
+            user (str, optional): username to connect to host and query slurm jobs. Defaults to None.
+            progressbar (bool, optional): Displays an ASCII progress-bar. Defaults to True.
+        """
         print("starting up")
         self.basepath = os.path.abspath(basepath)
         self.user = user
@@ -76,9 +85,9 @@ class Woof():
             hours_left = (nruns - finished_runs) * (avg_runtime / 3600)
             
             if hasErr:
-                color = '\033[91m'
+                color = '\033[91m' # red
             elif perc_finished == 1:
-                color = '\033[92m'
+                color = '\033[92m' # green
             else:
                 color = ''
 
@@ -90,6 +99,12 @@ class Woof():
                 print("")
     
     def guard(self, refresh_time: int = 30):
+        """
+        Main function, calls self.check periodically and displays the result in a formatted way
+
+        Args:
+            refresh_time (int, optional): Time to refresh in seconds. Defaults to 30.
+        """
         while True:
             self.check()
             os.system("clear")
