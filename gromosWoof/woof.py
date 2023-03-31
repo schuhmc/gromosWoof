@@ -8,14 +8,14 @@ from gromosWoof.ssh import SSHConnection
 import numpy as np
 
 class Woof():
-    def __init__(self, basepath: str = "./", host: str = None, user: str = None, progressbar = True):
+    def __init__(self,user: str, basepath: str = "./", host: str = None,  progressbar = True):
         """
         Watchdog class
 
         Args:
+            user (str): username to connect to host and query slurm jobs. Defaults to None.
             basepath (str, optional): Path to the directory where the individual simulation folders are. Defaults to "./".
             host (str, optional): hostname to connect to to get slurm status. Defaults to None.
-            user (str, optional): username to connect to host and query slurm jobs. Defaults to None.
             progressbar (bool, optional): Displays an ASCII progress-bar. Defaults to True.
         """
         print("starting up")
@@ -54,7 +54,9 @@ class Woof():
                     lines = subprocess.Popen(['tail', omdpath], stdout=subprocess.PIPE).stdout.readlines()
                     if b'MD++ finished successfully\n' in lines:
                         self.df.at[(dirpath, runfile), 'status'] = 'finished'
-                        time = float(lines[0].split()[-1])
+                        for l in lines:
+                            if l.startswith(b"Overall time used:"):
+                                time = float(l.split()[-1])
                         self.df.at[(dirpath, runfile), 'runtime'] = int(f"{time:.0f}")
                     else:
                         self.df.at[(dirpath, runfile), 'status'] = 'crashed'
@@ -62,11 +64,13 @@ class Woof():
                     self.df.at[(dirpath, runfile), 'status'] = 'pending'
 
         jobs, err = self.connection.exec_command(f"squeue -u {self.user} -o '%A,%T,%o'")
+        print(jobs, err)
 
         for job in jobs.split('\n')[1:-1]:
             jID, jStat, Jcmd = job.split(",")
             dirname = os.path.dirname(Jcmd)
             runfile = os.path.basename(Jcmd)
+            print(jID, jStat, Jcmd)
 
             if (dirname, runfile) in self.df.index:
                 self.df.at[(dirname, runfile), 'jobID'] = jID
@@ -83,6 +87,10 @@ class Woof():
             perc_finished = finished_runs / nruns
             avg_runtime = np.nanmean(data['runtime'].values)
             hours_left = (nruns - finished_runs) * (avg_runtime / 3600)
+            if finished_runs == nruns:
+                status = "FINISHED"
+            else:
+                status = data['status'][finished_runs]
             
             if hasErr:
                 color = '\033[91m' # red
@@ -93,7 +101,7 @@ class Woof():
 
             color_reset = '\033[0m'
 
-            print(color+"{:<30}{:<9}{:<11}{:<10}{:<8.2f}".format(runName, finished_runs, nruns, data['status'][finished_runs-1], hours_left) + color_reset, end="")
+            print(color+"{:<30}{:<9}{:<11}{:<10}{:<8.2f}".format(runName, finished_runs, nruns, status, hours_left) + color_reset, end="")
 
             if self.progressbar:
                 print(color+f"[{'x'*round(perc_finished*75)}{'-'*round((1-perc_finished)*75)}]" + color_reset)
