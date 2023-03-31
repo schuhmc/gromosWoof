@@ -93,7 +93,7 @@ class Woof():
 
             color_reset = '\033[0m'
 
-            print(color+"{:<30}{:<9}{:<11}{:<10}{:<8.2f}".format(runName, finished_runs, nruns, data['status'][-1], hours_left) + color_reset, end="")
+            print(color+"{:<30}{:<9}{:<11}{:<10}{:<8.2f}".format(runName, finished_runs, nruns, data['status'][finished_runs-1], hours_left) + color_reset, end="")
 
             if self.progressbar:
                 print(color+f"[{'x'*round(perc_finished*75)}{'-'*round((1-perc_finished)*75)}]" + color_reset)
