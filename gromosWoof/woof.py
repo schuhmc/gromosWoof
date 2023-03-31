@@ -33,7 +33,7 @@ class Woof():
         runtimes = list()
 
         # Loop over directories in the basepath and create dataframe
-        for all_runs in glob(self.basepath+'/*/*.run'):
+        for all_runs in glob(self.basepath+'/**/*.run', recursive=True):
             dirs.append(os.path.dirname(all_runs))
             runfiles.append(os.path.basename(all_runs))
             status.append("unknown")
