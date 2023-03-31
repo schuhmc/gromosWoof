@@ -104,6 +104,8 @@ class Woof():
             print(color+"{:<30}{:<9}{:<11}{:<10}{:<8.2f}".format(runName, finished_runs, nruns, status, hours_left) + color_reset, end="")
 
             if self.progressbar:
+                if os.get_terminal_size().columns < 150:
+                    print("")
                 print(color+f"[{'x'*round(perc_finished*75)}{'-'*round((1-perc_finished)*75)}]" + color_reset)
             else:
                 print("")
