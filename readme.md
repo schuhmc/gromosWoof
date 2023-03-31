@@ -2,10 +2,13 @@
 
 A simple python tool to monitor the status of running gromos simulations in a slurm environment.
 
+Example output:
+![example output](example.png)
+
 ## Installation
 
 1. Download the git repository
-2. Change directory into the repository.
+2. Change your directory into the repository.
 3. Run `pip install .`
 4. Done.
 
@@ -13,7 +16,7 @@ A simple python tool to monitor the status of running gromos simulations in a sl
 
 ### Prerequisites
 
-Your gromos jobs need to be in the following directory structure (names of the directories are not important, but numbers of the runs are):
+Your gromos jobs need to be in the following directory structure (the names of the directories are not important, but the numbers of the runs are):
 
 ```
 basedir
@@ -43,6 +46,6 @@ dog = Woof(basedir=*path_of_basedir*, user=*your_username*, host=*host_of_slurm_
 dog.guard(refresh_time=*seconds_to_refresh_status*)
 ```
 
-Run this script with: `python script.py`
+Run this script using: `python script.py`
 
 This will then try to connect to your remote host using ssh, goes through all directories in your basepath and tries to determine the status of your runs. A summary is displayed in the console and refreshed periodically.

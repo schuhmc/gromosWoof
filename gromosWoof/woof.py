@@ -74,7 +74,7 @@ class Woof():
 
     def summarize(self):
         # Printing function that prints a pretty summary
-        print("{:<30}{:<15}{:<15}{:<15}{:<15}".format("Directory","Finished","Total Runs","Error","ETA (h)"))
+        print("{:<30}{:<9}{:<11}{:<10}{:<8}".format("Directory","Finished","Total Runs", "Status", "ETA (h)"))
         for rundir, data in self.df.groupby(level=0, sort=False):
             runName = rundir.split("/")[-1]
             nruns = len(data)
@@ -91,10 +91,12 @@ class Woof():
             else:
                 color = ''
 
-            print(color+"{:<30}{:<15}{:<15}{:<15}{:<15.2f}".format(runName, finished_runs, nruns, hasErr, hours_left), end="")
+            color_reset = '\033[0m'
+
+            print(color+"{:<30}{:<9}{:<11}{:<10}{:<8.2f}".format(runName, finished_runs, nruns, data['status'][-1], hours_left) + color_reset, end="")
 
             if self.progressbar:
-                print(color+f"[{'x'*round(perc_finished*75)}{'-'*round((1-perc_finished)*75)}]")
+                print(color+f"[{'x'*round(perc_finished*75)}{'-'*round((1-perc_finished)*75)}]" + color_reset)
             else:
                 print("")
     
@@ -106,8 +108,13 @@ class Woof():
             refresh_time (int, optional): Time to refresh in seconds. Defaults to 30.
         """
         while True:
-            self.check()
-            os.system("clear")
-            print(f"Last check on {datetime.now().isoformat()}")
-            self.summarize()
-            time.sleep(refresh_time)
+            try:
+                self.check()
+                os.system("clear")
+                print(f"Last check on {datetime.now().isoformat()}")
+                self.summarize()
+                time.sleep(refresh_time)
+            except KeyboardInterrupt:
+                print("\nExiting...")
+                self.connection.closeSession()
+                exit()
