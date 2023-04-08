@@ -6,6 +6,8 @@ import time
 from datetime import datetime
 from gromosWoof.ssh import SSHConnection
 import numpy as np
+import warnings
+from natsort import natsorted
 
 class Woof():
     def __init__(self,user: str, basepath: str = "./", host: str = None,  progressbar = True):
@@ -33,7 +35,7 @@ class Woof():
         runtimes = list()
 
         # Loop over directories in the basepath and create dataframe
-        for all_runs in glob(self.basepath+'/**/*.run', recursive=True):
+        for all_runs in natsorted(glob(self.basepath+'/**/*.run', recursive=True)):
             dirs.append(os.path.dirname(all_runs))
             runfiles.append(os.path.basename(all_runs))
             status.append("unknown")
@@ -49,7 +51,7 @@ class Woof():
             dirpath = i[0][0]
             runfile = i[0][1]
             omdpath = dirpath + "/" + runfile.split(".run")[0] + ".omd"
-            if self.df.at[(dirpath, runfile), 'status'] == "unknown":
+            if not self.df.at[(dirpath, runfile), 'status'] == "finished":
                 if os.path.isfile(omdpath):
                     lines = subprocess.Popen(['tail', omdpath], stdout=subprocess.PIPE).stdout.readlines()
                     if b'MD++ finished successfully\n' in lines:
@@ -64,13 +66,11 @@ class Woof():
                     self.df.at[(dirpath, runfile), 'status'] = 'pending'
 
         jobs, err = self.connection.exec_command(f"squeue -u {self.user} -o '%A,%T,%o'")
-        print(jobs, err)
 
         for job in jobs.split('\n')[1:-1]:
             jID, jStat, Jcmd = job.split(",")
             dirname = os.path.dirname(Jcmd)
             runfile = os.path.basename(Jcmd)
-            print(jID, jStat, Jcmd)
 
             if (dirname, runfile) in self.df.index:
                 self.df.at[(dirname, runfile), 'jobID'] = jID
@@ -85,7 +85,9 @@ class Woof():
             finished_runs = (data['status'] == 'finished').sum()
             hasErr = 'crashed' in data['status']
             perc_finished = finished_runs / nruns
-            avg_runtime = np.nanmean(data['runtime'].values)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                avg_runtime = np.nanmean(data['runtime'].values)
             hours_left = (nruns - finished_runs) * (avg_runtime / 3600)
             if finished_runs == nruns:
                 status = "FINISHED"

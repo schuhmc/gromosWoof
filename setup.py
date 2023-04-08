@@ -7,7 +7,7 @@ setuptools.setup(
     author="Marc Schuh",
     url="https://github.com/schuhmc/gromosWoof",
     packages=['gromosWoof'],
-    install_requires=["setuptools>=61.0", "paramiko", "pandas"],
+    install_requires=["setuptools>=61.0", "paramiko", "pandas", "natsort"],
     classifiers=[
     'Development Status :: Testing',
     'Operating System :: Linux',
