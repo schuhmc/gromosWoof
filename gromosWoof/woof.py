@@ -53,13 +53,14 @@ class Woof():
             omdpath = dirpath + "/" + runfile.split(".run")[0] + ".omd"
             if not self.df.at[(dirpath, runfile), 'status'] == "finished":
                 if os.path.isfile(omdpath):
-                    lines = subprocess.Popen(['tail', omdpath], stdout=subprocess.PIPE).stdout.readlines()
+                    lines = subprocess.Popen(['tail', '-20', omdpath], stdout=subprocess.PIPE).stdout.readlines()
                     if b'MD++ finished successfully\n' in lines:
                         self.df.at[(dirpath, runfile), 'status'] = 'finished'
+                        time = np.NAN
                         for l in lines:
-                            if l.startswith(b"Overall time used:"):
+                            if l.startswith(b"Overall time used:") or l.startswith(b'Wall time total'):
                                 time = float(l.split()[-1])
-                        self.df.at[(dirpath, runfile), 'runtime'] = int(f"{time:.0f}")
+                        self.df.at[(dirpath, runfile), 'runtime'] = time
                     else:
                         self.df.at[(dirpath, runfile), 'status'] = 'crashed'
                 else:
